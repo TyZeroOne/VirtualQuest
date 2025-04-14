@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.4'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.flywaydb.flyway' version '9.22.3'
 }
 
 group = 'com.virtualquest.platform'
@@ -15,6 +16,14 @@ java {
 
 repositories {
     mavenCentral()
+}
+
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/postgres'
+    user = 'postgres'
+    password = '1234'
+    locations = ['classpath:db/migration']
+    baselineOnMigrate = true
 }
 
 dependencies {
@@ -33,9 +42,14 @@ dependencies {
     // Документация API
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
+    // Миграции
+    implementation 'org.flywaydb:flyway-core'
+
     // Тестирование
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'com.h2database:h2'
 }
 
 tasks.named('test') {
