@@ -18,7 +18,7 @@ public class Quest {
     private String title;
     private String description;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @Enumerated(EnumType.STRING)

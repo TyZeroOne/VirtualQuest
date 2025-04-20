@@ -1,57 +1,106 @@
 package org.virtualquest.platform.repository;
 
+import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import org.virtualquest.platform.model.*;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.virtualquest.platform.model.Quest;
-import org.virtualquest.platform.model.Rating;
-import org.virtualquest.platform.model.Users;
-import org.virtualquest.platform.model.enums.Difficulty;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@EntityScan("org.virtualquest.platform.model")
+@ActiveProfiles("test")
 public class RatingRepositoryTest {
 
     @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
     private RatingRepository ratingRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private QuestRepository questRepository;
+
+    private Users testUser;
+    private Quest testQuest;
 
     @BeforeEach
     void setUp() {
-        Users user = new Users();
-        user.setUsername("rater");
-        user.setEmail("rater@example.com");
-        user.setPassword("password");
-        userRepository.save(user);
+        testUser = new Users();
+        testUser.setUsername("rater");
+        testUser.setEmail("test@example.com");
+        testUser.setPassword("password123");
+        entityManager.persist(testUser);
 
-        Quest quest = new Quest();
-        quest.setTitle("Test Quest");
-        quest.setDifficulty(Difficulty.MEDIUM);
-        quest.setCreator(user);
-        questRepository.save(quest);
+        testQuest = new Quest();
+        testQuest.setTitle("Dragon Slayer");
+        entityManager.persist(testQuest);
     }
 
     @Test
-    void testFindByQuestId() {
-        Users user = userRepository.findByUsername("rater").orElseThrow();
-        Quest quest = questRepository.findAll().get(0);
-
+    public void testCreateRating() {
         Rating rating = new Rating();
-        rating.setUser(user);
-        rating.setQuest(quest);
-        rating.setRating(4);
-        ratingRepository.save(rating);
+        rating.setUser(testUser);
+        rating.setQuest(testQuest);
+        rating.setRating(5);
+        rating.setReview("Amazing experience!");
 
-        List<Rating> found = ratingRepository.findByQuestId(quest.getId());
+        Rating saved = ratingRepository.save(rating);
+
+        assertNotNull(saved.getId());
+        assertEquals(5, saved.getRating());
+    }
+
+    @Test
+    public void testDuplicateRatingPrevention() {
+        Rating firstRating = new Rating();
+        firstRating.setUser(testUser);
+        firstRating.setQuest(testQuest);
+        firstRating.setRating(5);
+
+        ratingRepository.save(firstRating);
+        entityManager.flush();
+
+        Rating secondRating = new Rating();
+        secondRating.setUser(testUser);
+        secondRating.setQuest(testQuest);
+        secondRating.setRating(4);
+
+        assertThrows(DataIntegrityViolationException.class, () -> {
+            ratingRepository.save(secondRating);
+            entityManager.flush();
+        });
+    }
+
+    @Test
+    public void testFindByQuest() {
+        Rating rating = new Rating();
+        rating.setUser(testUser);
+        rating.setQuest(testQuest);
+        rating.setRating(5);
+        ratingRepository.save(rating);
+        entityManager.flush();
+
+        List<Rating> found = ratingRepository.findByQuestId(testQuest.getId());
         assertEquals(1, found.size());
+        assertEquals(5, found.get(0).getRating());
+    }
+
+    @Test
+    public void testRatingConstraints() {
+        Rating invalidRating = new Rating();
+        invalidRating.setUser(testUser);
+        invalidRating.setQuest(testQuest);
+        invalidRating.setRating(6);
+
+        assertThrows(ConstraintViolationException.class, () -> {
+            ratingRepository.save(invalidRating);
+            entityManager.flush();
+        });
     }
 }

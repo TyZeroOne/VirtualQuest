@@ -1,12 +1,17 @@
 package org.virtualquest.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ratings")
+@Table(
+        name = "ratings",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "quest_id"})
+)
 @Data
 @NoArgsConstructor
 public class Rating {
@@ -22,6 +27,8 @@ public class Rating {
     @JoinColumn(name = "quest_id")
     private Quest quest;
 
+    @Min(1)
+    @Max(5)
     private int rating;
     private String review;
     private LocalDateTime createdAt;

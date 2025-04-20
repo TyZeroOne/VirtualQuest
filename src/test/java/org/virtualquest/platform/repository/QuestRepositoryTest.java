@@ -1,45 +1,43 @@
 package org.virtualquest.platform.repository;
 
-import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.virtualquest.platform.model.Quest;
 import org.virtualquest.platform.model.Users;
 import org.virtualquest.platform.model.enums.Difficulty;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@EntityScan("org.virtualquest.platform.model")
-@Transactional
+@ActiveProfiles("test")
 public class QuestRepositoryTest {
 
     @Autowired
-    private QuestRepository questRepository;
-    @Autowired
-    private UserRepository userRepository;
+    private TestEntityManager entityManager;
 
-    @BeforeEach
-    void setUp() {
-        Users creator = new Users();
-        creator.setUsername("creator");
-        creator.setEmail("creator@example.com");
-        creator.setPassword("password");
-        userRepository.save(creator);
-    }
+    @Autowired
+    private QuestRepository questRepository;
 
     @Test
-    void testFindByDifficulty() {
-        Quest quest = new Quest();
-        quest.setTitle("Easy Quest");
-        quest.setDifficulty(Difficulty.EASY);
-        quest.setCreator(userRepository.findByUsername("creator").orElseThrow());
-        questRepository.save(quest);
+    public void testSaveAndFindQuest() {
+        Users creator = new Users();
+        creator.setUsername("creator");
+        creator.setEmail("test@example.com");
+        creator.setPassword("password123");
+        entityManager.persist(creator);
 
-        List<Quest> found = questRepository.findByDifficulty(Difficulty.EASY);
-        assertEquals(1, found.size());
+        Quest quest = new Quest();
+        quest.setTitle("Epic Quest");
+        quest.setDifficulty(Difficulty.HARD);
+        quest.setCreator(creator);
+
+        Quest saved = questRepository.save(quest);
+        assertNotNull(saved.getId());
+
+        Quest found = questRepository.findById(saved.getId()).orElse(null);
+        assertEquals("Epic Quest", found.getTitle());
+        assertEquals(Difficulty.HARD, found.getDifficulty());
     }
 }

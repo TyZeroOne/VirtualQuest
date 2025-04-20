@@ -19,7 +19,7 @@ repositories {
 }
 
 flyway {
-    url = 'jdbc:postgresql://localhost:5432/postgres'
+    url = 'jdbc:postgresql://localhost:5434/postgres'
     user = 'postgres'
     password = '1234'
     locations = ['classpath:db/migration']
@@ -31,6 +31,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // База данных
     runtimeOnly 'org.postgresql:postgresql'
