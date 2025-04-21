@@ -2,6 +2,7 @@ package org.virtualquest.platform.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.test.context.ActiveProfiles;
 import org.virtualquest.platform.model.Quest;
 import org.virtualquest.platform.model.Step;
 import org.virtualquest.platform.model.Users;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @EntityScan("org.virtualquest.platform.model")
+@ActiveProfiles("test")
 public class StepRepositoryTest {
 
     @Autowired

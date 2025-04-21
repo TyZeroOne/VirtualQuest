@@ -29,7 +29,8 @@ CREATE TABLE quests (
     creator_id BIGINT REFERENCES users(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
-    points INT DEFAULT 0
+    points INT DEFAULT 0,
+    published BOOLEAN DEFAULT FALSE
 );
 
 -- Шаги квеста
