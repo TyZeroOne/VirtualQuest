@@ -22,7 +22,7 @@ CREATE TABLE quests (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     description TEXT,
-    content JSONB,
+    content TEXT,
     difficulty VARCHAR(20) NOT NULL,
     started_count INT DEFAULT 0,
     completed_count INT DEFAULT 0,
@@ -39,7 +39,7 @@ CREATE TABLE steps (
     quest_id BIGINT REFERENCES quests(id),
     step_number INT NOT NULL,
     description TEXT NOT NULL,
-    options JSONB,
+    options TEXT,
     next_step_id BIGINT REFERENCES steps(id)
 );
 

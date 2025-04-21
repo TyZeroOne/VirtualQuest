@@ -20,7 +20,7 @@ public class Step {
     private int stepNumber;
     private String description;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "TEXT")
     private String options;
 
     @OneToOne
