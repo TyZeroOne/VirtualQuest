@@ -1,5 +1,7 @@
 package org.virtualquest.platform.service;
 
+import org.virtualquest.platform.exception.BusinessLogicException;
+import org.virtualquest.platform.exception.ResourceNotFoundException;
 import org.virtualquest.platform.model.*;
 import org.virtualquest.platform.repository.ProgressRepository;
 import org.virtualquest.platform.repository.QuestRepository;
@@ -31,9 +33,9 @@ public class ProgressService {
     @Transactional
     public Progress startQuest(Long userId, Long questId) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new IllegalArgumentException("Quest not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
 
         Progress progress = new Progress();
         progress.setUser(user);
@@ -46,12 +48,12 @@ public class ProgressService {
     @Transactional
     public Progress updateStep(Long progressId, Long nextStepId) {
         Progress progress = progressRepository.findById(progressId)
-                .orElseThrow(() -> new IllegalArgumentException("Progress not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Progress not found"));
         Step nextStep = stepRepository.findById(nextStepId)
-                .orElseThrow(() -> new IllegalArgumentException("Step not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Step not found"));
 
         if (!nextStep.getQuest().getId().equals(progress.getQuest().getId())) {
-            throw new IllegalArgumentException("Step does not belong to the quest");
+            throw new BusinessLogicException("Step does not belong to the quest");
         }
 
         progress.setCurrentStep(nextStep);
@@ -62,7 +64,7 @@ public class ProgressService {
     @Transactional
     public Progress completeQuest(Long progressId) {
         Progress progress = progressRepository.findById(progressId)
-                .orElseThrow(() -> new IllegalArgumentException("Progress not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Progress not found"));
         progress.setCompleted(true);
         progress.setCompletedAt(LocalDateTime.now());
         return progressRepository.save(progress);

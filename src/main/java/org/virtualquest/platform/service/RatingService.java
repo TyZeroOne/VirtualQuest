@@ -1,6 +1,8 @@
 package org.virtualquest.platform.service;
 
 import org.virtualquest.platform.dto.RatingDTO;
+import org.virtualquest.platform.exception.DuplicateRatingException;
+import org.virtualquest.platform.exception.ResourceNotFoundException;
 import org.virtualquest.platform.model.*;
 import org.virtualquest.platform.model.enums.Difficulty;
 import org.virtualquest.platform.repository.RatingRepository;
@@ -31,13 +33,13 @@ public class RatingService {
     @Transactional
     public Rating addRating(Long userId, Long questId, RatingDTO dto) {
         if (ratingRepository.existsByUserIdAndQuestId(userId, questId)) {
-            throw new IllegalArgumentException("User already rated this quest");
+            throw new DuplicateRatingException("User already rated this quest");
         }
 
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new IllegalArgumentException("Quest not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
 
         // Обновить рейтинг пользователя
         int points = calculatePoints(quest.getDifficulty(), dto.getRating());
@@ -70,7 +72,7 @@ public class RatingService {
     @Transactional
     public void deleteRating(Long ratingId, Long userId) {
         Rating rating = ratingRepository.findById(ratingId)
-                .orElseThrow(() -> new IllegalArgumentException("Rating not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Rating not found"));
         if (!rating.getUser().getId().equals(userId)) {
             throw new SecurityException("User is not the author of the rating");
         }

@@ -1,6 +1,10 @@
 package org.virtualquest.platform.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.virtualquest.platform.dto.UpdateUserDTO;
+import org.virtualquest.platform.dto.UserRegistrationDTO;
 import org.virtualquest.platform.model.Users;
 import org.virtualquest.platform.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +24,16 @@ public class UserController {
     // Регистрация
     @PostMapping("/register")
     public ResponseEntity<Users> registerUser(
-            @RequestParam String username,
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam String fullName
+            @Parameter(description = "Данные пользователя")
+            @Valid @RequestBody UserRegistrationDTO dto
     ) {
-        Users user = userService.registerUser(username, email, password, fullName);
-        return ResponseEntity.ok(user);
+        Users user = userService.registerUser(
+                dto.getUsername(),
+                dto.getEmail(),
+                dto.getPassword(),
+                dto.getFullName()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     // Получение информации о пользователе

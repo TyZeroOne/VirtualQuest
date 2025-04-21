@@ -1,6 +1,7 @@
 package org.virtualquest.platform.service;
 
 import org.virtualquest.platform.dto.QuestDTO;
+import org.virtualquest.platform.exception.ResourceNotFoundException;
 import org.virtualquest.platform.model.*;
 import org.virtualquest.platform.model.enums.Difficulty;
 import org.virtualquest.platform.repository.*;
@@ -29,7 +30,7 @@ public class QuestService {
     @Transactional
     public Quest createDraft(Long creatorId, QuestDTO dto) {
         Users creator = userRepository.findById(creatorId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Quest quest = new Quest();
         quest.setTitle(dto.getTitle());
@@ -44,7 +45,7 @@ public class QuestService {
     @Transactional
     public Quest publishQuest(Long questId) {
         Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new IllegalArgumentException("Quest not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
         quest.setPublished(true);
         return questRepository.save(quest);
     }
@@ -53,7 +54,7 @@ public class QuestService {
     @Transactional
     public Step addStep(Long questId, String description, String options) {
         Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new IllegalArgumentException("Quest not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
 
         Step step = new Step();
         step.setQuest(quest);
@@ -73,7 +74,7 @@ public class QuestService {
     @Transactional
     public Quest updateQuest(Long questId, QuestDTO dto) {
         Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new IllegalArgumentException("Quest not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
 
         if (dto.getTitle() != null) quest.setTitle(dto.getTitle());
         if (dto.getDescription() != null) quest.setDescription(dto.getDescription());
@@ -85,9 +86,9 @@ public class QuestService {
     @Transactional
     public Quest addCategory(Long questId, Long categoryId) {
         Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new IllegalArgumentException("Quest not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         quest.getCategories().add(category);
         return questRepository.save(quest);
@@ -103,7 +104,7 @@ public class QuestService {
     @Transactional
     public void incrementStartedCount(Long questId) {
         Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new IllegalArgumentException("Quest not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
         quest.setStartedCount(quest.getStartedCount() + 1);
         questRepository.save(quest);
     }
