@@ -2,7 +2,6 @@
 
     import org.springframework.data.jpa.repository.EntityGraph;
     import org.springframework.data.jpa.repository.Modifying;
-    import org.virtualquest.platform.model.Progress;
     import org.virtualquest.platform.model.Quest;
     import org.virtualquest.platform.model.enums.Difficulty;
     import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +30,6 @@
         @Query("UPDATE Quest q SET q.startedCount = q.startedCount + 1 WHERE q.id = :questId")
         int incrementStartedCount(@Param("questId") Long questId);
         @EntityGraph(attributePaths = "steps")
-        @Query("SELECT q FROM Quest q WHERE q.id = :questId")
+        @Query("SELECT DISTINCT q FROM Quest q LEFT JOIN FETCH q.steps WHERE q.id = :questId")
         Optional<Quest> findByIdWithSteps(@Param("questId") Long questId);
     }

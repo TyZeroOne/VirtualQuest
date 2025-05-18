@@ -166,7 +166,6 @@ class UserControllerIT {
                 .andExpect(jsonPath("$.username").value("updateduser"));
     }
 
-    // Тест на исключение, если, например, userService выбрасывает ResourceNotFoundException
     @Test
     void updateUser_NotFound() throws Exception {
         UpdateUserDTO dto = new UpdateUserDTO();
