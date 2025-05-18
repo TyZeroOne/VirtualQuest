@@ -1,5 +1,6 @@
 package org.virtualquest.platform.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.virtualquest.platform.dto.StepDTO;
 import org.virtualquest.platform.exception.ResourceNotFoundException;
 import org.virtualquest.platform.model.*;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
+@Slf4j
 @Service
 public class StepService {
     private final StepRepository stepRepository;
@@ -20,23 +22,22 @@ public class StepService {
     }
 
     // Создать шаг
-    @Transactional
     public Step createStep(Long questId, StepDTO dto) {
-        Quest quest = questRepository.findById(questId)
+        Quest quest = questRepository.findByIdWithSteps(questId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
+
+        Step nextStep = null;
+        if (dto.getNextStepId() != null) {
+            nextStep = stepRepository.findById(dto.getNextStepId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Next step not found"));
+        }
 
         Step step = new Step();
         step.setQuest(quest);
         step.setDescription(dto.getDescription());
         step.setOptions(dto.getOptions());
         step.setStepNumber(quest.getSteps().size() + 1);
-
-        // Установка следующего шага (если указан)
-        if (dto.getNextStepId() != null) {
-            Step nextStep = stepRepository.findById(dto.getNextStepId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Next step not found"));
-            step.setNextStep(nextStep);
-        }
+        step.setNextStep(nextStep);
 
         return stepRepository.save(step);
     }
@@ -50,15 +51,18 @@ public class StepService {
         if (dto.getDescription() != null) {
             step.setDescription(dto.getDescription());
         }
+
         if (dto.getOptions() != null) {
             step.setOptions(dto.getOptions());
         }
+
         if (dto.getNextStepId() != null) {
             Step nextStep = stepRepository.findById(dto.getNextStepId())
                     .orElseThrow(() -> new ResourceNotFoundException("Next step not found"));
             step.setNextStep(nextStep);
+        } else {
+            step.setNextStep(null);
         }
-
         return stepRepository.save(step);
     }
 
@@ -77,7 +81,6 @@ public class StepService {
     }
 
     // Получить все шаги квеста
-    @Transactional(readOnly = true)
     public List<Step> getStepsByQuest(Long questId) {
         return stepRepository.findByQuestId(questId);
     }

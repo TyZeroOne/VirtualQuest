@@ -10,6 +10,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import java.util.List;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -29,7 +31,7 @@ public class RatingRepositoryTest {
     void setUp() {
         testUser = new Users();
         testUser.setUsername("rater");
-        testUser.setEmail("test@example.com");
+        testUser.setEmail("test" + UUID.randomUUID() + "@example.com");
         testUser.setPassword("password123");
         entityManager.persist(testUser);
 

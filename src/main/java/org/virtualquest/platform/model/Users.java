@@ -1,10 +1,14 @@
 package org.virtualquest.platform.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -30,11 +34,16 @@ public class Users {
     private LocalDateTime lastLoginDate;
 
     @OneToMany(mappedBy = "creator")
-    private List<Quest> createdQuests;
+    @JsonBackReference
+    private List<Quest> createdQuests = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
-    private List<Progress> progresses;
+    private List<Progress> progresses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
-    private List<Rating> ratings;
+    private List<Rating> ratings = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role roles;
 }

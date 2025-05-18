@@ -1,8 +1,14 @@
 package org.virtualquest.platform.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.virtualquest.platform.exception.DuplicateRatingException;
 import org.virtualquest.platform.exception.ResourceNotFoundException;
+import org.virtualquest.platform.model.Role;
 import org.virtualquest.platform.model.Users;
+import org.virtualquest.platform.repository.RoleRepository;
 import org.virtualquest.platform.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,41 +19,25 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-    }
-
-    // Регистрация пользователя
-    @Transactional
-    public Users registerUser(String username, String email, String password, String fullName) {
-        if (userRepository.existsByUsernameOrEmail(username, email)) {
-            throw new DuplicateRatingException("Username or email already exists");
-        }
-
-        Users user = new Users();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setFullName(fullName);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setLastLoginDate(LocalDateTime.now());
-        return userRepository.save(user);
+        this.roleRepository = roleRepository;
     }
 
     // Получение пользователя по ID
-    @Transactional(readOnly = true)
     public Optional<Users> getUserById(Long userId) {
         return userRepository.findById(userId);
     }
 
     // Поиск по username
-    @Transactional(readOnly = true)
     public Optional<Users> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
@@ -61,10 +51,22 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void updateLastLoginDate(String username) {
+        Optional<Users> optionalUser = userRepository.findByUsername(username);
+
+        if (optionalUser.isPresent()) {
+            Users user = optionalUser.get();
+            user.setLastLoginDate(LocalDateTime.now());
+            userRepository.save(user);
+        } else {
+            throw new ResourceNotFoundException("User not found with username: " + username);
+        }
+    }
+
     // Получение топ-N пользователей по рейтингу
-    @Transactional(readOnly = true)
     public List<Users> getTopUsers(int limit) {
-        return userRepository.findTopNByOrderByRatingDesc(limit);
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("rating")));
+        return userRepository.findTopNByOrderByRatingDesc(pageable);
     }
 
     // Обновление времени последнего входа
@@ -139,5 +141,18 @@ public class UserService {
             user.setEmail(dto.getEmail());
         }
         return userRepository.save(user);
+    }
+
+    public void changeUserRole(Long userId, String roleName) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Role.RoleName roleEnum = Role.RoleName.valueOf(roleName.toUpperCase());
+        Role role = roleRepository.findByName(roleEnum)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+
+        user.setRoles(role);
+
+        userRepository.save(user);
     }
 }

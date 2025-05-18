@@ -1,5 +1,6 @@
 package org.virtualquest.platform.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.virtualquest.platform.exception.DuplicateRatingException;
 import org.virtualquest.platform.exception.ResourceNotFoundException;
 import org.virtualquest.platform.model.Category;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class CategoryService {
     private final CategoryRepository categoryRepository;
@@ -31,19 +33,16 @@ public class CategoryService {
     }
 
     // Получение всех категорий
-    @Transactional(readOnly = true)
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
 
     // Поиск по ID
-    @Transactional(readOnly = true)
     public Optional<Category> getCategoryById(Long id) {
         return categoryRepository.findById(id);
     }
 
     // Поиск по названию
-    @Transactional(readOnly = true)
     public Optional<Category> findByName(String name) {
         return categoryRepository.findByName(name);
     }
@@ -60,7 +59,6 @@ public class CategoryService {
     }
 
     // Удаление категории
-    @Transactional
     public void deleteCategory(Long id) {
         categoryRepository.deleteById(id);
     }

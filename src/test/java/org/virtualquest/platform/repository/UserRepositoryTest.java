@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -19,7 +22,7 @@ public class UserRepositoryTest {
         // Create
         Users user = new Users();
         user.setUsername("testuser");
-        user.setEmail("test@example.com");
+        user.setEmail("test" + UUID.randomUUID() + "@example.com");
         user.setPassword("password123");
 
         Users savedUser = userRepository.save(user);

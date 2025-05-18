@@ -1,5 +1,6 @@
 package org.virtualquest.platform.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.virtualquest.platform.dto.RatingDTO;
 import org.virtualquest.platform.exception.DuplicateRatingException;
 import org.virtualquest.platform.exception.ResourceNotFoundException;
@@ -12,8 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
+@Slf4j
 @Service
 public class RatingService {
+
+    private static final int EASY_MULTIPLIER = 10;
+    private static final int MEDIUM_MULTIPLIER = 20;
+    private static final int HARD_MULTIPLIER = 30;
+
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
     private final QuestRepository questRepository;
@@ -54,13 +61,11 @@ public class RatingService {
     }
 
     // Получить все оценки квеста
-    @Transactional(readOnly = true)
     public List<Rating> getRatingsByQuest(Long questId) {
         return ratingRepository.findByQuestId(questId);
     }
 
     // Рассчитать средний рейтинг квеста
-    @Transactional(readOnly = true)
     public double getAverageRating(Long questId) {
         return ratingRepository.findByQuestId(questId).stream()
                 .mapToInt(Rating::getRating)
@@ -86,9 +91,9 @@ public class RatingService {
     // Расчет баллов на основе сложности
     private int calculatePoints(Difficulty difficulty, int rating) {
         return switch (difficulty) {
-            case EASY -> rating * 10;
-            case MEDIUM -> rating * 20;
-            case HARD -> rating * 30;
+            case EASY -> rating * EASY_MULTIPLIER;
+            case MEDIUM -> rating * MEDIUM_MULTIPLIER;
+            case HARD -> rating * HARD_MULTIPLIER;
         };
     }
 }

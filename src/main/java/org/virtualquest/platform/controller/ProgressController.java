@@ -1,5 +1,6 @@
 package org.virtualquest.platform.controller;
 
+import org.virtualquest.platform.dto.ProgressDTO;
 import org.virtualquest.platform.model.Progress;
 import org.virtualquest.platform.service.ProgressService;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,11 @@ public class ProgressController {
     }
 
     // Начать квест
-    @PostMapping("/start")
+    @PostMapping("/{progressId}/start")
     public ResponseEntity<Progress> startQuest(
-            @RequestParam Long userId,
-            @RequestParam Long questId
+            @RequestBody ProgressDTO dto
     ) {
-        return ResponseEntity.ok(progressService.startQuest(userId, questId));
+        return ResponseEntity.ok(progressService.startQuest(dto.getUserId(), dto.getQuestId()));
     }
 
     // Обновить шаг
@@ -40,21 +40,13 @@ public class ProgressController {
     }
 
     // Получить текущий прогресс
-    @GetMapping
+    @GetMapping("/{questId}/progress")
     public ResponseEntity<Progress> getProgress(
             @RequestParam Long userId,
-            @RequestParam Long questId
+            @PathVariable Long questId
     ) {
         Optional<Progress> progress = progressService.getCurrentProgress(userId, questId);
         return progress.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    // Статистика по квесту
-    @GetMapping("/stats/{questId}")
-    public ResponseEntity<String> getQuestStats(@PathVariable Long questId) {
-        long started = progressService.getStartedCount(questId);
-        long completed = progressService.getCompletedCount(questId);
-        return ResponseEntity.ok("Started: " + started + ", Completed: " + completed);
     }
 }

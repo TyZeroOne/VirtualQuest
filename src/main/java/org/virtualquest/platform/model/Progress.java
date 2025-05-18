@@ -1,5 +1,6 @@
 package org.virtualquest.platform.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,10 +16,12 @@ public class Progress {
     private Long id;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "user_id")
     private Users user;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "quest_id")
     private Quest quest;
 

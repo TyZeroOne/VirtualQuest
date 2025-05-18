@@ -1,5 +1,6 @@
 package org.virtualquest.platform.controller;
 
+import org.virtualquest.platform.dto.CategoryDTO;
 import org.virtualquest.platform.model.Category;
 import org.virtualquest.platform.service.CategoryService;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +18,14 @@ public class CategoryController {
     }
 
     // Создание категории
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Category> createCategory(
-            @RequestParam String name,
-            @RequestParam String description
+            @RequestBody CategoryDTO category
     ) {
-        return ResponseEntity.ok(categoryService.createCategory(name, description));
+        return ResponseEntity.ok(categoryService.createCategory(
+                category.getName(),
+                category.getDescription())
+        );
     }
 
     // Получение всех категорий

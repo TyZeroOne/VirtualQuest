@@ -1,6 +1,6 @@
 package org.virtualquest.platform.controller;
 
-import org.virtualquest.platform.dto.RatingDTO;
+import org.virtualquest.platform.dto.RatingRequestDTO;
 import org.virtualquest.platform.model.Rating;
 import org.virtualquest.platform.service.RatingService;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +18,12 @@ public class RatingController {
 
     // Добавить оценку
     @PostMapping
-    public ResponseEntity<Rating> addRating(
-            @RequestParam Long userId,
-            @RequestParam Long questId,
-            @RequestBody RatingDTO dto
-    ) {
-        return ResponseEntity.ok(ratingService.addRating(userId, questId, dto));
+    public ResponseEntity<Rating> addRating(@RequestBody RatingRequestDTO request) {
+        return ResponseEntity.ok(
+                ratingService.addRating(request.getUserId(),
+                        request.getQuestId(),
+                        request.getRating())
+        );
     }
 
     // Получить оценки квеста

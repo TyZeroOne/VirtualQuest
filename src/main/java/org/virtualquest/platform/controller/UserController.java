@@ -21,21 +21,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    // Регистрация
-    @PostMapping("/register")
-    public ResponseEntity<Users> registerUser(
-            @Parameter(description = "Данные пользователя")
-            @Valid @RequestBody UserRegistrationDTO dto
-    ) {
-        Users user = userService.registerUser(
-                dto.getUsername(),
-                dto.getEmail(),
-                dto.getPassword(),
-                dto.getFullName()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
-    }
-
     // Получение информации о пользователе
     @GetMapping("/{userId}")
     public ResponseEntity<Users> getUser(@PathVariable Long userId) {

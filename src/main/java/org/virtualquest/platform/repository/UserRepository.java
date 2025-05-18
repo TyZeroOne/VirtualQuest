@@ -1,5 +1,6 @@
 package org.virtualquest.platform.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.virtualquest.platform.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,6 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     boolean existsByUsernameOrEmail(String username, String email);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
-    @Query("SELECT u FROM Users u ORDER BY u.rating DESC LIMIT ?1")
-    List<Users> findTopNByOrderByRatingDesc(int limit);
+    @Query("SELECT u FROM Users u ORDER BY u.rating DESC")
+    List<Users> findTopNByOrderByRatingDesc(Pageable pageable);
 }

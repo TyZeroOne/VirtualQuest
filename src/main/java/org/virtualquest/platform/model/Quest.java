@@ -1,5 +1,6 @@
 package org.virtualquest.platform.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.virtualquest.platform.model.enums.Difficulty;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -32,23 +33,25 @@ public class Quest {
 
     @ManyToOne
     @JoinColumn(name = "creator_id")
+    @JsonBackReference
     private Users creator;
 
     @OneToMany(mappedBy = "quest", cascade = CascadeType.ALL)
     private List<Step> steps = new ArrayList<>();
 
     @OneToMany(mappedBy = "quest")
-    private List<Progress> progresses;
+    private List<Progress> progresses = new ArrayList<>();
 
     @OneToMany(mappedBy = "quest")
-    private List<Rating> ratings;
+    private List<Rating> ratings = new ArrayList<>();
 
     @ManyToMany
+    @JsonBackReference
     @JoinTable(
             name = "quest_categories",
             joinColumns = @JoinColumn(name = "quest_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    private List<Category> categories;
+    private List<Category> categories = new ArrayList<>();
     private boolean published;
 }

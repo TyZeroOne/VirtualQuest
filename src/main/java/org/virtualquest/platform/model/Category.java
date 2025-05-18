@@ -1,8 +1,11 @@
 package org.virtualquest.platform.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -15,11 +18,12 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false) // Делаем обязательным
+    @Column(nullable = false)
     private String name;
 
     private String description;
 
     @ManyToMany(mappedBy = "categories")
-    private List<Quest> quests;
+    @JsonBackReference
+    private List<Quest> quests = new ArrayList<>();
 }

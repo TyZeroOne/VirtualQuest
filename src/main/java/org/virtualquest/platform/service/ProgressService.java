@@ -1,5 +1,6 @@
 package org.virtualquest.platform.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.virtualquest.platform.exception.BusinessLogicException;
 import org.virtualquest.platform.exception.ResourceNotFoundException;
 import org.virtualquest.platform.model.*;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ProgressService {
     private final ProgressRepository progressRepository;
@@ -41,6 +43,11 @@ public class ProgressService {
         progress.setUser(user);
         progress.setQuest(quest);
         progress.setStartedAt(LocalDateTime.now());
+
+        // Увеличиваем счетчик начавших
+        quest.setStartedCount(quest.getStartedCount() + 1);
+        questRepository.save(quest);
+
         return progressRepository.save(progress);
     }
 
@@ -67,24 +74,16 @@ public class ProgressService {
                 .orElseThrow(() -> new ResourceNotFoundException("Progress not found"));
         progress.setCompleted(true);
         progress.setCompletedAt(LocalDateTime.now());
+
+        Quest quest = progress.getQuest();
+        quest.setCompletedCount(quest.getCompletedCount() + 1);
+        questRepository.save(quest);
+
         return progressRepository.save(progress);
     }
 
     // Получить текущий прогресс
-    @Transactional(readOnly = true)
     public Optional<Progress> getCurrentProgress(Long userId, Long questId) {
         return progressRepository.findByUserIdAndQuestId(userId, questId);
-    }
-
-    // Статистика: количество начавших квест
-    @Transactional(readOnly = true)
-    public long getStartedCount(Long questId) {
-        return progressRepository.countByQuestId(questId);
-    }
-
-    // Статистика: количество завершивших квест
-    @Transactional(readOnly = true)
-    public long getCompletedCount(Long questId) {
-        return progressRepository.countByQuestIdAndCompletedTrue(questId);
     }
 }

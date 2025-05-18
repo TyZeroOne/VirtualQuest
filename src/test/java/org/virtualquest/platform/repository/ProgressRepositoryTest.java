@@ -7,6 +7,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.virtualquest.platform.model.enums.Difficulty;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -23,7 +26,7 @@ public class ProgressRepositoryTest {
     public void testProgressTracking() {
         Users user = new Users();
         user.setUsername("testuser");
-        user.setEmail("test@example.com");
+        user.setEmail("test" + UUID.randomUUID() + "@example.com");
         user.setPassword("password123");
         entityManager.persist(user);
         entityManager.flush();

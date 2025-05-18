@@ -1,6 +1,10 @@
 package org.virtualquest.platform.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.virtualquest.platform.dto.QuestCreateDTO;
 import org.virtualquest.platform.dto.QuestDTO;
+import org.virtualquest.platform.dto.QuestStatsDTO;
+import org.virtualquest.platform.exception.AccessDeniedException;
 import org.virtualquest.platform.exception.ResourceNotFoundException;
 import org.virtualquest.platform.model.*;
 import org.virtualquest.platform.model.enums.Difficulty;
@@ -8,12 +12,13 @@ import org.virtualquest.platform.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Service
 public class QuestService {
     private final QuestRepository questRepository;
     private final UserRepository userRepository;
-    private final StepRepository stepRepository;
     private final CategoryRepository categoryRepository;
 
     public QuestService(QuestRepository questRepository,
@@ -22,13 +27,12 @@ public class QuestService {
                         CategoryRepository categoryRepository) {
         this.questRepository = questRepository;
         this.userRepository = userRepository;
-        this.stepRepository = stepRepository;
         this.categoryRepository = categoryRepository;
     }
 
     // Создание квеста (черновик)
     @Transactional
-    public Quest createDraft(Long creatorId, QuestDTO dto) {
+    public Quest createDraft(Long creatorId, QuestCreateDTO dto) {
         Users creator = userRepository.findById(creatorId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -38,6 +42,12 @@ public class QuestService {
         quest.setDifficulty(dto.getDifficulty());
         quest.setCreator(creator);
         quest.setPublished(false);
+        // Добавление категорий
+        dto.getCategoryIds().forEach(categoryId -> {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+            quest.getCategories().add(category);
+        });
         return questRepository.save(quest);
     }
 
@@ -50,28 +60,13 @@ public class QuestService {
         return questRepository.save(quest);
     }
 
-    // Добавление шага к квесту
-    @Transactional
-    public Step addStep(Long questId, String description, String options) {
-        Quest quest = questRepository.findById(questId)
+    // Получение информации о квесте
+    public Quest getQuestById(Long questId) {
+        return questRepository.findById(questId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
-
-        Step step = new Step();
-        step.setQuest(quest);
-        step.setDescription(description);
-        step.setOptions(options);
-        step.setStepNumber(quest.getSteps().size() + 1);
-        return stepRepository.save(step);
-    }
-
-    // Удаление шага
-    @Transactional
-    public void deleteStep(Long stepId) {
-        stepRepository.deleteById(stepId);
     }
 
     // Обновление информации о квесте
-    @Transactional
     public Quest updateQuest(Long questId, QuestDTO dto) {
         Quest quest = questRepository.findById(questId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
@@ -94,18 +89,41 @@ public class QuestService {
         return questRepository.save(quest);
     }
 
+    @Transactional
+    public void deleteQuest(Long questId, Long requesterId, String role) {
+        Quest quest = questRepository.findById(questId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
+
+        if (role.equals("ROLE_MODERATOR") || role.equals("ROLE_ADMIN")) {
+            questRepository.delete(quest);
+        }
+        else if (quest.getCreator().getId().equals(requesterId)) {
+            questRepository.delete(quest);
+        } else {
+            throw new AccessDeniedException("Only quest creator");
+        }
+    }
+
     // Поиск квестов по фильтрам
-    @Transactional(readOnly = true)
     public List<Quest> findQuests(boolean published, Difficulty difficulty, List<Long> categoryIds) {
         return questRepository.findByFilters(published, difficulty, categoryIds);
     }
 
     // Увеличение счетчика начавших квест
-    @Transactional
     public void incrementStartedCount(Long questId) {
+        int updated = questRepository.incrementStartedCount(questId);
+        if (updated == 0) {
+            throw new ResourceNotFoundException("Quest not found");
+        }
+    }
+
+    public QuestStatsDTO getQuestStats(Long questId) {
         Quest quest = questRepository.findById(questId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
-        quest.setStartedCount(quest.getStartedCount() + 1);
-        questRepository.save(quest);
+
+        return new QuestStatsDTO(
+                quest.getStartedCount(),
+                quest.getCompletedCount()
+        );
     }
 }
