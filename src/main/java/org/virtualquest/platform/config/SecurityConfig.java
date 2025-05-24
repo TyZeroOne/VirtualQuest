@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/api/recommendations/**",
                                 "/api/quests/**",
                                 "/api/categories/**",
-                                "/api/progress/**"
+                                "/api/progress/**",
+                                "/api/users/**"
                                 ).access(
                                 new WebExpressionAuthorizationManager("!hasAuthority('BANNED')")
                         )

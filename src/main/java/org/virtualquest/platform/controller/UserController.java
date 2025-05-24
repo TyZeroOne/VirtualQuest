@@ -1,10 +1,6 @@
 package org.virtualquest.platform.controller;
 
-import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.virtualquest.platform.dto.UpdateUserDTO;
-import org.virtualquest.platform.dto.UserRegistrationDTO;
 import org.virtualquest.platform.model.Users;
 import org.virtualquest.platform.service.UserService;
 import org.springframework.http.ResponseEntity;

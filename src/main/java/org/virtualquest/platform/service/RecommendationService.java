@@ -19,16 +19,78 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecommendationService {
 
+    private static final int MIN_RATED_QUESTS_FOR_RECOMMENDATION = 3;
+    private static final int MIN_COMPLETED_QUESTS_FOR_RECOMMENDATION = 3;
+
     private final RatingRepository ratingRepository;
     private final QuestRepository questRepository;
     private final UserRepository userRepository;
     private final UserService userService;
 
     public List<Quest> recommendQuestsForUser(Long userId, int limit) {
-        // 1. Получаем рейтинги пользователя (4 или 5)
+        // 1. Рейтинги пользователя (4 и 5)
         List<Rating> userGoodRatings = ratingRepository.findByUserIdAndRatingGreaterThanEqual(userId, 4);
 
-        // 2. Квесты и категории, которые ему понравились
+        // 2. Если есть оценки, используем категории из оценённых квестов
+        // if (userGoodRatings.size() >= MIN_RATED_QUESTS_FOR_RECOMMENDATION) {
+        if (!userGoodRatings.isEmpty()) {
+            return recommendByRatedCategories(userId, userGoodRatings, limit);
+        }
+
+        // 3. Иначе ищем категории из квестов, которые пользователь проходил
+        List<Quest> completedQuests = questRepository.findCompletedQuestsByUserId(userId);
+        // if (completedQuests.size() >= MIN_COMPLETED_QUESTS_FOR_RECOMMENDATION) {
+        if (!completedQuests.isEmpty()) {
+            return recommendByPlayedCategories(userId, completedQuests, limit);
+        }
+
+        // 4. Иначе — fallback на топ-пользователей
+        return recommendFromTopUsers(userId, limit);
+    }
+
+    private List<Quest> recommendByPlayedCategories(Long userId, List<Quest> completedQuests, int limit) {
+        Set<Long> playedQuestIds = completedQuests.stream()
+                .map(Quest::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Long> categoryFrequency = completedQuests.stream()
+                .flatMap(q -> q.getCategories().stream())
+                .collect(Collectors.groupingBy(Category::getId, Collectors.counting()));
+
+        Set<Long> preferredCategoryIds = categoryFrequency.keySet();
+
+        // 1. Ищем квесты с совпадающими категориями
+        List<Quest> candidateQuests = questRepository.findAllPublishedWithCategories(preferredCategoryIds).stream()
+                .filter(q -> !playedQuestIds.contains(q.getId()))
+                .toList();
+
+        if (candidateQuests.isEmpty()) return List.of();
+
+        Set<Long> candidateQuestIds = candidateQuests.stream()
+                .map(Quest::getId)
+                .collect(Collectors.toSet());
+
+        // 2. Получаем хорошо оценённые квесты другими
+        List<Rating> goodRatingsByOthers = ratingRepository.findByQuestIdInAndRatingGreaterThanEqual(candidateQuestIds, 4);
+
+        // 3. Сортировка по совпадению категорий
+        Map<Quest, Long> scored = goodRatingsByOthers.stream()
+                .map(Rating::getQuest)
+                .filter(candidateQuests::contains)
+                .collect(Collectors.groupingBy(q -> q,
+                        Collectors.summingLong(q -> q.getCategories().stream()
+                                .filter(c -> preferredCategoryIds.contains(c.getId()))
+                                .count()
+                        )));
+
+        return scored.entrySet().stream()
+                .sorted(Map.Entry.<Quest, Long>comparingByValue().reversed())
+                .limit(limit)
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    private List<Quest> recommendByRatedCategories(Long userId, List<Rating> userGoodRatings, int limit) {
         Set<Long> likedQuestIds = userGoodRatings.stream()
                 .map(r -> r.getQuest().getId())
                 .collect(Collectors.toSet());
@@ -37,18 +99,9 @@ public class RecommendationService {
                 .flatMap(r -> r.getQuest().getCategories().stream())
                 .collect(Collectors.groupingBy(Category::getId, Collectors.counting()));
 
-        if (likedQuestIds.isEmpty() || categoryFrequency.isEmpty()) {
-            // слишком мало данных — fallback на топ игроков
-            return recommendFromTopUsers(userId, limit);
-        }
-
         Set<Long> preferredCategoryIds = categoryFrequency.keySet();
 
-        // 3. Получаем все квесты, у которых есть хотя бы одна из категорий
-        List<Quest> candidateQuests = questRepository.findAllPublishedWithCategories(preferredCategoryIds);
-
-        // 4. Отбираем квесты, которые пользователь еще не оценивал
-        candidateQuests = candidateQuests.stream()
+        List<Quest> candidateQuests = questRepository.findAllPublishedWithCategories(preferredCategoryIds).stream()
                 .filter(q -> !likedQuestIds.contains(q.getId()))
                 .toList();
 
@@ -56,11 +109,9 @@ public class RecommendationService {
             return recommendFromTopUsers(userId, limit);
         }
 
-        // 5. Получаем оценки других пользователей 4 и 5
         Set<Long> candidateQuestIds = candidateQuests.stream().map(Quest::getId).collect(Collectors.toSet());
         List<Rating> goodRatingsByOthers = ratingRepository.findByQuestIdInAndRatingGreaterThanEqual(candidateQuestIds, 4);
 
-        // 6. Группировка квестов по популярности и совпадению категорий
         Map<Quest, Long> scored = goodRatingsByOthers.stream()
                 .map(Rating::getQuest)
                 .filter(candidateQuests::contains)

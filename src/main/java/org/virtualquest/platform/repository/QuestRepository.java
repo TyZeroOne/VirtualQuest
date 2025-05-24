@@ -46,4 +46,6 @@
         List<Quest> findByStartedCountGreaterThanEqual(
                 @Param("startedCount") int startedCount,
                 @Param("autoCalculated") boolean autoCalculated);
+        @Query("SELECT p.quest FROM Progress p WHERE p.user.id = :userId AND p.completed = true")
+        List<Quest> findCompletedQuestsByUserId(@Param("userId") Long userId);
     }

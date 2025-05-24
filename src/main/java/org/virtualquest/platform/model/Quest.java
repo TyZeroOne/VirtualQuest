@@ -15,6 +15,9 @@ import java.util.List;
 @NoArgsConstructor
 public class Quest {
 
+    private static final int EASY_LIMIT = 35;
+    private static final int MEDIUM_LIMIT = 70;
+    private static final int MAX_LIMIT = 100;
     private static final int AUTO_CALCULATION_THRESHOLD = 100;
 
     @Id
@@ -68,11 +71,11 @@ public class Quest {
     private boolean autoCalculated; // Автоматический расчет баллов
 
     public void calculateDifficulty() {
-        this.points = Math.min(this.points, 100);
+        this.points = Math.min(this.points, MAX_LIMIT);
 
-        if (this.points <= 35) {
+        if (this.points <= EASY_LIMIT) {
             this.difficulty = Difficulty.EASY;
-        } else if (this.points <= 70) {
+        } else if (this.points <= MEDIUM_LIMIT) {
             this.difficulty = Difficulty.MEDIUM;
         } else {
             this.difficulty = Difficulty.HARD;
@@ -86,7 +89,7 @@ public class Quest {
     public void calculateAutoPoints() {
         if (this.autoCalculated && this.startedCount >= AUTO_CALCULATION_THRESHOLD) {
             double completionRate = (double) this.completedCount / this.startedCount;
-            this.points = (int) Math.round(completionRate * 100);
+            this.points = (int) Math.round(completionRate * MAX_LIMIT);
             calculateDifficulty();
         }
     }
