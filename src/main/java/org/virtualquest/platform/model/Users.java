@@ -51,4 +51,7 @@ public class Users {
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean canPostReviews = true;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 }

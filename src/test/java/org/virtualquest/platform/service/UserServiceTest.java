@@ -207,7 +207,7 @@ class UserServiceTest {
         Users user = new Users();
         user.setUsername("test");
 
-        when(userRepository.findByUsername("test")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameAndDeletedFalse("test")).thenReturn(Optional.of(user));
 
         userService.updateLastLoginDate("test");
 
@@ -216,7 +216,7 @@ class UserServiceTest {
 
     @Test
     void testUpdateLastLoginDate_UserNotFound() {
-        when(userRepository.findByUsername("missing")).thenReturn(Optional.empty());
+        when(userRepository.findByUsernameAndDeletedFalse("missing")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> userService.updateLastLoginDate("missing"));
     }

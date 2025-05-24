@@ -9,9 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<Users, Long> {
-    Optional<Users> findByUsername(String username);
-    Optional<Users> findByEmail(String email);
-    boolean existsByUsernameOrEmail(String username, String email);
+    Optional<Users> findByUsernameAndDeletedFalse(String username);
+    Optional<Users> findByEmailAndDeletedFalse(String email);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     @Query("""
@@ -24,7 +23,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     Integer calculateUserRatingFromCompletedQuests(@Param("userId") Long userId);
     @Query("""
         SELECT u FROM Users u
-        WHERE EXISTS (
+        WHERE u.deleted = false AND EXISTS (
             SELECT 1 FROM Progress p
             WHERE p.user = u AND p.completed = true
         )

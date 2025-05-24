@@ -53,7 +53,7 @@ public class UserRepositoryTest {
         user.setPassword("123");
         userRepository.save(user);
 
-        Users found = userRepository.findByUsername("uniqueuser").orElse(null);
+        Users found = userRepository.findByUsernameAndDeletedFalse("uniqueuser").orElse(null);
         assertNotNull(found);
         assertEquals("unique@example.com", found.getEmail());
     }

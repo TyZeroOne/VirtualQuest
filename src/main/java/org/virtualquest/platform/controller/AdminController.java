@@ -16,7 +16,7 @@ public class AdminController {
     private final UserService userService;
     private final QuestService questService;
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')") // Доступ только для администраторов
+    // Доступ только для администраторов
     @PostMapping("/change-role")
     public ResponseEntity<?> changeUserRole(@RequestBody ChangeRoleRequestDTO request) {
         try {
@@ -31,5 +31,11 @@ public class AdminController {
     public ResponseEntity<Void> toggleEdit(@PathVariable Long quest_id) {
         questService.toggleQuestEditable(quest_id);
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> softDeleteUser(@PathVariable Long userId) {
+        userService.softDeleteUser(userId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -40,20 +41,11 @@ public class UserService {
 
     // Поиск по username
     public Optional<Users> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        return userRepository.findByUsernameAndDeletedFalse(username);
     }
 
-    // Обновление рейтинга
-//    @Transactional
-//    public void updateUserRating(Long userId, int points) {
-//        Users user = userRepository.findById(userId)
-//                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-//        user.setRating(user.getRating() + points);
-//        userRepository.save(user);
-//    }
-
     public void updateLastLoginDate(String username) {
-        Optional<Users> optionalUser = userRepository.findByUsername(username);
+        Optional<Users> optionalUser = userRepository.findByUsernameAndDeletedFalse(username);
 
         if (optionalUser.isPresent()) {
             Users user = optionalUser.get();
@@ -62,6 +54,29 @@ public class UserService {
         } else {
             throw new ResourceNotFoundException("User not found with username: " + username);
         }
+    }
+
+    @Transactional
+    public void softDeleteUser(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setDeleted(true);
+        user.setEmail(generateRandomizedEmail(user.getEmail()));
+        user.setUsername(generateRandomizedUsername(user.getUsername()));
+
+        userRepository.save(user);
+    }
+
+    private String generateRandomizedEmail(String originalEmail) {
+        String uniqueSuffix = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        String domain = originalEmail.contains("@") ? originalEmail.substring(originalEmail.indexOf("@")) : "@deleted.com";
+        return "deleted_" + uniqueSuffix + domain;
+    }
+
+    private String generateRandomizedUsername(String originalUsername) {
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        return "deleted_user_" + suffix;
     }
 
     // Обновление времени последнего входа
