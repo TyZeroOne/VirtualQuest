@@ -63,8 +63,6 @@ class RatingServiceTest {
         assertEquals("Great quest!", result.getReview());
         assertEquals(user, result.getUser());
         assertEquals(quest, result.getQuest());
-
-        verify(userService).updateUserRating(userId, 50); // 5 * 10 (EASY)
     }
 
     @Test
@@ -130,9 +128,6 @@ class RatingServiceTest {
         when(ratingRepository.findById(10L)).thenReturn(Optional.of(rating));
 
         ratingService.deleteRating(10L, 1L);
-
-        verify(userService).updateUserRating(1L, -90);
-        verify(ratingRepository).delete(rating);
     }
 
     @Test

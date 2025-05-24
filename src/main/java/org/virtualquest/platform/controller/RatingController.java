@@ -17,7 +17,7 @@ public class RatingController {
     }
 
     // Добавить оценку
-    @PostMapping
+    @PostMapping("/addRating")
     public ResponseEntity<Rating> addRating(@RequestBody RatingRequestDTO request) {
         return ResponseEntity.ok(
                 ratingService.addRating(request.getUserId(),

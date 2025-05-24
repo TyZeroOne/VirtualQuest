@@ -85,4 +85,9 @@ public class UserController {
                 userService.updateUser(userId, dto)
         );
     }
+
+    @GetMapping("/{userId}/rating")
+    public ResponseEntity<Integer> getUserRating(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserRating(userId));
+    }
 }

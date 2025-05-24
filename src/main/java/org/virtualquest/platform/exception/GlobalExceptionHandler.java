@@ -37,6 +37,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(message, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         return buildErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);

@@ -40,26 +40,6 @@ class UserServiceTest {
     }
 
     @Test
-    void testUpdateUserRating_Success() {
-        Users user = new Users();
-        user.setId(1L);
-        user.setRating(10);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        userService.updateUserRating(1L, 5);
-        assertEquals(15, user.getRating());
-        verify(userRepository).save(user);
-    }
-
-    @Test
-    void testUpdateUserRating_UserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> userService.updateUserRating(1L, 10));
-    }
-
-    @Test
     void testUpdateUsername_Success() {
         Users user = new Users();
         user.setId(1L);

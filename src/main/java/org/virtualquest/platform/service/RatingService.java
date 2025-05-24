@@ -11,15 +11,13 @@ import org.virtualquest.platform.repository.QuestRepository;
 import org.virtualquest.platform.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
 @Service
 public class RatingService {
-
-    private static final int EASY_MULTIPLIER = 10;
-    private static final int MEDIUM_MULTIPLIER = 20;
-    private static final int HARD_MULTIPLIER = 30;
 
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
@@ -48,15 +46,12 @@ public class RatingService {
         Quest quest = questRepository.findById(questId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
 
-        // Обновить рейтинг пользователя
-        int points = calculatePoints(quest.getDifficulty(), dto.getRating());
-        userService.updateUserRating(userId, points);
-
         Rating rating = new Rating();
         rating.setUser(user);
         rating.setQuest(quest);
         rating.setRating(dto.getRating());
         rating.setReview(dto.getReview());
+        rating.setCreatedAt(LocalDateTime.now());
         return ratingRepository.save(rating);
     }
 
@@ -81,19 +76,7 @@ public class RatingService {
         if (!rating.getUser().getId().equals(userId)) {
             throw new SecurityException("User is not the author of the rating");
         }
-        userService.updateUserRating(userId, -calculatePoints(
-                rating.getQuest().getDifficulty(),
-                rating.getRating()
-        ));
         ratingRepository.delete(rating);
     }
 
-    // Расчет баллов на основе сложности
-    private int calculatePoints(Difficulty difficulty, int rating) {
-        return switch (difficulty) {
-            case EASY -> rating * EASY_MULTIPLIER;
-            case MEDIUM -> rating * MEDIUM_MULTIPLIER;
-            case HARD -> rating * HARD_MULTIPLIER;
-        };
-    }
 }

@@ -1,6 +1,7 @@
 package org.virtualquest.platform.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.virtualquest.platform.model.Users;
 import org.virtualquest.platform.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,11 +24,23 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Users user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
 
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        // Добавляем основную роль пользователя
+        authorities.add(new SimpleGrantedAuthority(user.getRoles().getName().name()));
+
+        // Добавляем блокировки как дополнительные authorities
+        if (user.isBanned()) {
+            authorities.add(new SimpleGrantedAuthority("BANNED"));
+        }
+        if (!user.isCanPostReviews()) {
+            authorities.add(new SimpleGrantedAuthority("REVIEWS_BLOCKED"));
+        }
+
         return new User(
                 user.getUsername(),
                 user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRoles().getName().name()))
+                authorities
         );
     }
 }
-

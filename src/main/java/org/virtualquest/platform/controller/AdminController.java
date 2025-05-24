@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.virtualquest.platform.dto.ChangeRoleRequestDTO;
+import org.virtualquest.platform.service.QuestService;
 import org.virtualquest.platform.service.UserService;
 
 @RestController
@@ -13,6 +14,7 @@ import org.virtualquest.platform.service.UserService;
 public class AdminController {
 
     private final UserService userService;
+    private final QuestService questService;
 
     @PreAuthorize("hasRole('ROLE_ADMIN')") // Доступ только для администраторов
     @PostMapping("/change-role")
@@ -23,5 +25,11 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
+    }
+
+    @PutMapping("/{quest_id}/toggle-edit")
+    public ResponseEntity<Void> toggleEdit(@PathVariable Long quest_id) {
+        questService.toggleQuestEditable(quest_id);
+        return ResponseEntity.ok().build();
     }
 }

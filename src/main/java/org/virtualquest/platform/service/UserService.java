@@ -17,6 +17,7 @@ import org.virtualquest.platform.dto.UpdateUserDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -43,13 +44,13 @@ public class UserService {
     }
 
     // Обновление рейтинга
-    @Transactional
-    public void updateUserRating(Long userId, int points) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        user.setRating(user.getRating() + points);
-        userRepository.save(user);
-    }
+//    @Transactional
+//    public void updateUserRating(Long userId, int points) {
+//        Users user = userRepository.findById(userId)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+//        user.setRating(user.getRating() + points);
+//        userRepository.save(user);
+//    }
 
     public void updateLastLoginDate(String username) {
         Optional<Users> optionalUser = userRepository.findByUsername(username);
@@ -61,12 +62,6 @@ public class UserService {
         } else {
             throw new ResourceNotFoundException("User not found with username: " + username);
         }
-    }
-
-    // Получение топ-N пользователей по рейтингу
-    public List<Users> getTopUsers(int limit) {
-        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("rating")));
-        return userRepository.findTopNByOrderByRatingDesc(pageable);
     }
 
     // Обновление времени последнего входа
@@ -153,6 +148,55 @@ public class UserService {
 
         user.setRoles(role);
 
+        userRepository.save(user);
+    }
+
+    public Integer getUserRating(Long userId) {
+        Integer rating = userRepository.calculateUserRatingFromCompletedQuests(userId);
+        return rating != null ? rating : 0;
+    }
+
+    // Получение топ-N пользователей по рейтингу
+    public List<Users> getTopUsers(int limit) {
+        List<Users> users = userRepository.findAllWithCompletedQuests();
+
+        return users.stream()
+                .map(u -> Map.entry(u, getUserRating(u.getId())))
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .limit(limit)
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    @Transactional
+    public void banUser(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setBanned(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void unbanUser(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setBanned(false);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void disableReviews(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setCanPostReviews(false);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void enableReviews(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setCanPostReviews(true);
         userRepository.save(user);
     }
 }

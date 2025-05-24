@@ -1,6 +1,9 @@
 package org.virtualquest.platform.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.virtualquest.platform.dto.QuestCreateDTO;
 import org.virtualquest.platform.dto.QuestDTO;
 import org.virtualquest.platform.dto.QuestStatsDTO;
@@ -109,12 +112,63 @@ public class QuestService {
         return questRepository.findByFilters(published, difficulty, categoryIds);
     }
 
+    @Transactional
+    public void updateQuestPoints(Long questId, int points, boolean isManual) {
+
+        Quest quest = questRepository.findById(questId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
+
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+
+        if (isManual && !quest.isEditable() && !isAdmin) {
+            throw new IllegalStateException("Editing points is disabled for this quest");
+        }
+
+        quest.setPoints(points);
+        quest.calculateDifficulty();
+        quest.setRatingConsidered(true);
+        quest.setAutoCalculated(!isManual);
+        questRepository.save(quest);
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?") // Ежедневный расчет
+    public void recalculatePopularQuests() {
+        List<Quest> popularQuests = questRepository.findByStartedCountGreaterThanEqual(100, true);
+        popularQuests.forEach(Quest::calculateAutoPoints);
+        questRepository.saveAll(popularQuests);
+    }
+
     // Увеличение счетчика начавших квест
     public void incrementStartedCount(Long questId) {
         int updated = questRepository.incrementStartedCount(questId);
         if (updated == 0) {
             throw new ResourceNotFoundException("Quest not found");
         }
+    }
+
+    @Transactional
+    public void toggleQuestEditable(Long questId) {
+        Quest quest = questRepository.findById(questId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quest not found"));
+
+        quest.setEditable(!quest.isEditable());
+        questRepository.save(quest);
+    }
+
+    @Transactional
+    public void disableAutoCalculation(Long questId) {
+        Quest quest = getQuestById(questId);
+        quest.setAutoCalculated(false);
+        questRepository.save(quest);
+    }
+
+    @Transactional
+    public void enableAutoCalculation(Long questId) {
+        Quest quest = getQuestById(questId);
+        quest.setAutoCalculated(true);
+        questRepository.save(quest);
     }
 
     public QuestStatsDTO getQuestStats(Long questId) {

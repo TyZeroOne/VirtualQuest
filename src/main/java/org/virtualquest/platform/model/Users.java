@@ -29,7 +29,6 @@ public class Users {
     private String password;
 
     private String fullName;
-    private int rating;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginDate;
 
@@ -46,4 +45,10 @@ public class Users {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role roles;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean banned;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean canPostReviews = true;
 }

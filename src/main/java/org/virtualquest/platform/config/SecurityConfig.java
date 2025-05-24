@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.virtualquest.platform.filter.JwtAuthFilter;
 import org.virtualquest.platform.security.UserDetailsServiceImpl;
@@ -40,8 +41,23 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/moderator/**").hasRole("MODERATOR")
+                        .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/moderator/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_MODERATOR")
+                        .requestMatchers("/api/ratings/addRating").access(
+                                new WebExpressionAuthorizationManager(
+                                        "!hasAuthority('REVIEWS_BLOCKED')"
+                                )
+                        )
+                        .requestMatchers(
+                                "/api/ratings.**",
+                                "/api/steps/**",
+                                "/api/recommendations/**",
+                                "/api/quests/**",
+                                "/api/categories/**",
+                                "/api/progress/**"
+                                ).access(
+                                new WebExpressionAuthorizationManager("!hasAuthority('BANNED')")
+                        )
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

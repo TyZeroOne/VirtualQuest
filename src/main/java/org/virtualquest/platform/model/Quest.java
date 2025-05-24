@@ -14,6 +14,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class Quest {
+
+    private static final int AUTO_CALCULATION_THRESHOLD = 100;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,4 +57,38 @@ public class Quest {
     )
     private List<Category> categories = new ArrayList<>();
     private boolean published;
+
+    @Column(name = "is_rating_considered", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isRatingConsidered; // Учитывается в рейтинге
+
+    @Column(name = "is_editable", columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean isEditable = true; // Можно редактировать баллы
+
+    @Column(name = "auto_calculated", columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean autoCalculated; // Автоматический расчет баллов
+
+    public void calculateDifficulty() {
+        this.points = Math.min(this.points, 100);
+
+        if (this.points <= 35) {
+            this.difficulty = Difficulty.EASY;
+        } else if (this.points <= 70) {
+            this.difficulty = Difficulty.MEDIUM;
+        } else {
+            this.difficulty = Difficulty.HARD;
+        }
+
+        if (this.autoCalculated) {
+            this.isRatingConsidered = true;
+        }
+    }
+
+    public void calculateAutoPoints() {
+        if (this.autoCalculated && this.startedCount >= AUTO_CALCULATION_THRESHOLD) {
+            double completionRate = (double) this.completedCount / this.startedCount;
+            this.points = (int) Math.round(completionRate * 100);
+            calculateDifficulty();
+        }
+    }
+
 }
