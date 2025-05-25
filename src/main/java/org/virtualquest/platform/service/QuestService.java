@@ -33,6 +33,10 @@ public class QuestService {
         this.categoryRepository = categoryRepository;
     }
 
+    public List<Quest> getAllQuests() {
+        return questRepository.findAll();
+    }
+
     // Создание квеста (черновик)
     @Transactional
     public Quest createDraft(Long creatorId, QuestCreateDTO dto) {

@@ -17,6 +17,13 @@ public class UserController {
         this.userService = userService;
     }
 
+    // Вывод всех имеющихся пользователей
+    @GetMapping("/users")
+    public ResponseEntity<List<Users>> getAllUsers() {
+        List<Users> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
     // Получение информации о пользователе
     @GetMapping("/{userId}")
     public ResponseEntity<Users> getUser(@PathVariable Long userId) {

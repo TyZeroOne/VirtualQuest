@@ -27,6 +27,13 @@ public class QuestController {
         this.userRepository = userRepository;
     }
 
+    // Вывод всех имеющихся квестов
+    @GetMapping("/quests")
+    public ResponseEntity<List<Quest>> getAllQuests() {
+        List<Quest> quests = questService.getAllQuests();
+        return ResponseEntity.ok(quests);
+    }
+
     // Создание черновика
     @PostMapping("/draft")
     public ResponseEntity<Quest> createDraft(

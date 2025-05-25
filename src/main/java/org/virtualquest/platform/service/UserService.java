@@ -34,6 +34,10 @@ public class UserService {
         this.roleRepository = roleRepository;
     }
 
+    public List<Users> getAllUsers() {
+        return userRepository.findAllByDeletedFalse();
+    }
+
     // Получение пользователя по ID
     public Optional<Users> getUserById(Long userId) {
         return userRepository.findById(userId);
